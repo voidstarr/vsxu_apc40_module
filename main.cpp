@@ -21,25 +21,11 @@
 * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-#if defined(WIN32) || defined(_WIN64) || defined(__WATCOMC__)
-  #include <windows.h>
-  #include <conio.h>
-#else
-  //#include "wincompat.h"
-#endif
 #include "vsx_param.h"
 #include "vsx_module.h"
 #include "vsxfst.h"
 #include "RtMidi/RtMidi.h"
 #include <sstream>
-#define VSX_FONT_NO_FT 1
-//#include <FTGL/ftgl.h>
-//#include <FTGL/FTFont.h>
-#include "vsx_font.h"
-
-//#include <pthread.h>
-//#include <unistd.h>
-
 
 #define CC_ABSOLUTE 0
 #define CC_ID_TRACK 7
@@ -50,11 +36,11 @@
 #define ON 1.0f
 #define OFF 0.0f
 
-class vsx_apc_twenty_controller : vsx_module {
+class vsx_apc_fourty : vsx_module {
     unsigned int current_port=0;
     unsigned int port_count=0;
-    vsx_module_param_int* midi_source;
     RtMidiIn* m_midi_in;
+    vsx_module_param_int* midi_source;
     vsx_module_param_float* clip_launch[9][5];
     vsx_module_param_float* scene_launch[5];
     vsx_module_param_float* clip_stop[8];
@@ -66,15 +52,9 @@ class vsx_apc_twenty_controller : vsx_module {
     vsx_module_param_float* shift;
     vsx_module_param_float* knob;
 
-    // DEBUG
-//    vsx_module_param_render* debug;
-//    vsx_font* myf;
-//    vsx_module_param_float4* base_color;
-//    std::stringstream debug_buf;
-    // END DEBUG
 public:
 
-    vsx_apc_twenty_controller()
+    vsx_apc_fourty()
     {
         try {
             m_midi_in = new RtMidiIn(RtMidi::UNSPECIFIED,"vsxu_midi",1024*6);
@@ -85,7 +65,7 @@ public:
           }
     }
 
-    ~vsx_apc_twenty_controller()
+    ~vsx_apc_fourty()
     {
        delete m_midi_in;
     }
@@ -104,7 +84,7 @@ public:
         }
         in_buff << "";
       info->in_param_spec = in_buff.str().c_str();
-      info->identifier = "sound;midi;akai_apc_20";
+      info->identifier = "sound;midi;akai_apc40";
       info->out_param_spec =
               "tracks:complex{"
                 "track1:complex{"
@@ -221,9 +201,7 @@ public:
                 "knob_dir:float,"
                 "fader9:float"
               "}"
-             "}"
-             //"debug_render:render"
-              ;
+             "}";
       info->component_class = "system";
       info->description = "This represents the Akai APC20 midi\ncontroller.";
     }
@@ -282,9 +260,6 @@ public:
            record_arm[i-1]->set(0.0f);
            intbuf.str("");
         }
-//        debug = (vsx_module_param_render*)out_parameters.create(VSX_MODULE_PARAM_ID_RENDER,"debug_render");
-//        myf = new vsx_font();
-//        myf->init("/media/Bob/Projects/vsxu-project/vsxu/share/font/font-ascii.png");
         redeclare_in_params(in_parameters);
         m_midi_in->openPort(current_port);
 
@@ -321,22 +296,6 @@ public:
 
     }
 
-//    void output(vsx_module_param_abs *param)
-//    {
-//         VSX_UNUSED(param);
-//         vsx_vector p;
-//         p.set(-1.0,-1.0,0);
-//         glColor4f(base_color->get(0),base_color->get(1),base_color->get(2),base_color->get(3));
-//         std::stringstream dbg;
-//         dbg << "port:" << current_port << "paramport:" << midi_source->get() << "\n";
-//         dbg << "count:" << port_count << "\n";
-//         dbg << debug_buf.str().c_str();
-//         myf->print(p,dbg.str().c_str(),.1f);
-//         debug->set(1);
-
-//    }
-//    int dbgbf=0;
-
     void handle_messages()
     {
         std::vector<unsigned char> mess;
@@ -360,16 +319,10 @@ public:
                chan = byte1-0x80;
                type = NOTE_OFF;
             }
-
-//            if(dbgbf++>16){
-//                debug_buf.str("");
-//                dbgbf=0;
-//            }
-//            char bt1x[3];
-//            sprintf(bt1x,"%X",byte1);
-//            debug_buf << "type:" << type <<" byte1:" << byte1 <<" byte2:" << byte2 << " byte3:" << byte3 <<"\n";
             switch(type){
                 case NOTE_ON:
+                    vsx_printf("NOTE_ON: %X\n", byte2);
+                    fflush(stdout);
                     switch(byte2)
                     {
                         case 48:
@@ -407,6 +360,8 @@ public:
                     }
                 break;
             case NOTE_OFF:
+                vsx_printf("NOTE_OFF: %X\n", byte2);
+                fflush(stdout);
                 switch(byte2)
                 {
                     case 48:
@@ -445,6 +400,8 @@ public:
                 }
             break;
             case CC_ABSOLUTE:
+                vsx_printf("CC_ABSOLUTE: %X VALUE: %X\n", byte2, byte3);
+                fflush(stdout);
                 float val = (float)(byte3/127.0f);
                 if(byte2==CC_ID_TRACK){
                     fader[chan]->set(val);
@@ -564,7 +521,7 @@ vsx_module* create_new_module(unsigned long module, void* args)
         rtmidi_type = RtMidi::WINDOWS_DS;
       }
       #endif
-      return (vsx_module*)(new vsx_apc_twenty_controller);
+      return (vsx_module*)(new vsx_apc_fourty);
     }
   print_help();
   return 0;
@@ -575,7 +532,7 @@ void destroy_module(vsx_module* m,unsigned long module)
   switch(module)
   {
     case 0:
-    return delete (vsx_apc_twenty_controller*)m;
+    return delete (vsx_apc_fourty*)m;
   }
 }
 
