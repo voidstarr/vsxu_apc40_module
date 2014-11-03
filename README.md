@@ -1,4 +1,4 @@
-sound.midi.akai_apc40
+vsxu_apc40_module
 ================
 
 WIP implementation of MIDI communications for VSXu using the Akai APC40 controller.
