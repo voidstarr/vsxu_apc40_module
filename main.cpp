@@ -203,7 +203,7 @@ public:
               "}"
              "}";
       info->component_class = "system";
-      info->description = "This represents the Akai APC20 midi\ncontroller.";
+      info->description = "This represents the Akai APC40 midi\ncontroller.";
     }
 
     void declare_params(vsx_module_param_list& in_parameters, vsx_module_param_list& out_parameters)
@@ -485,11 +485,6 @@ void print_help()
   printf("  -sound_type_oss             - OSS sound system\n");
   #endif
   #endif
-  #if (PLATFORM == PLATFORM_WINDOWS)
-  printf("  DirectSound is the default sound driver, but you can override with any\n"
-         "  of the following:\n\n");
-  printf("  -sound_type_asio            - ASIO sound system\n");
-  #endif
 }
 
 
@@ -499,7 +494,6 @@ vsx_module* create_new_module(unsigned long module, void* args)
   switch(module)
   {
     case 0:
-      #if (PLATFORM == PLATFORM_LINUX)
       if (internal_args->has_param("sound_type_jack"))
       {
         // JACK
@@ -509,18 +503,6 @@ vsx_module* create_new_module(unsigned long module, void* args)
         // default - alsa
         rtmidi_type = RtMidi::LINUX_ALSA;
       }
-      #endif
-      #if (PLATFORM == PLATFORM_WINDOWS)
-      if (internal_args->has_param("sound_type_asio"))
-      {
-        // asio
-        rtmidi_type = RtMidi::WINDOWS_ASIO;
-      } else
-      {
-        // directsound
-        rtmidi_type = RtMidi::WINDOWS_DS;
-      }
-      #endif
       return (vsx_module*)(new vsx_apc_fourty);
     }
   print_help();
